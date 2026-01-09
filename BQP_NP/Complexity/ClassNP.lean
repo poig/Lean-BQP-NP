@@ -16,32 +16,33 @@ open Matrix
 
 variable {α : Type*} [DecidableEq α]
 
-/-! ## Language Definitions -/
+/-! ## Decision Problem (Language) Definitions -/
 
-/-- A language over alphabet α is a set of strings (lists) -/
-abbrev Language (α : Type*) := Set (List α)
+/-- A decision problem over alphabet α is a set of strings (lists).
+    Renamed from 'Language' to avoid conflict with Mathlib.Computability.Language -/
+abbrev DecisionProblem (α : Type*) := Set (List α)
 
 /-! ## Complexity Class P -/
 
-/-- Class P: Languages decidable in polynomial time.
+/-- Class P: Decision problems decidable in polynomial time.
 
-    A language L is in P if there exists a poly-time computable function f
+    A decision problem L is in P if there exists a poly-time computable function f
     such that: x ∈ L ↔ f(x) = [] (empty list = accept convention) -/
-def ClassP (α : Type*) [DecidableEq α] : Set (Language α) :=
+def ClassP (α : Type*) [DecidableEq α] : Set (DecisionProblem α) :=
   {L | ∃ f : (Fin 1 → List α) → List α,
     PolyTimeComputable f ∧ ∀ x, x ∈ L ↔ f ![x] = []}
 
 /-! ## Complexity Class NP -/
 
-/-- Class NP: Languages with polynomial-time verifiable certificates.
+/-- Class NP: Decision problems with polynomial-time verifiable certificates.
 
-    A language L is in NP if there exists:
+    A decision problem L is in NP if there exists:
     - A poly-time verifier V(x, cert)
     - A polynomial bound k on certificate size
     Such that: x ∈ L ↔ ∃ cert, |cert| ≤ |x|^k and V(x, cert) = []
 
     Note: We use List.length for the polynomial bound. -/
-def ClassNP (α : Type*) [DecidableEq α] : Set (Language α) :=
+def ClassNP (α : Type*) [DecidableEq α] : Set (DecisionProblem α) :=
   {L | ∃ (V : (Fin 2 → List α) → List α) (k : ℕ),
     PolyTimeComputable V ∧
     ∀ x, x ∈ L ↔ ∃ cert : List α, cert.length ≤ x.length ^ k ∧ V ![x, cert] = []}
@@ -50,9 +51,9 @@ def ClassNP (α : Type*) [DecidableEq α] : Set (Language α) :=
 
 /-- Karp (many-one) reduction: A ≤ₚ B.
 
-    Language A reduces to B if there exists a poly-time computable function f
+    Decision problem A reduces to B if there exists a poly-time computable function f
     such that: x ∈ A ↔ f(x) ∈ B -/
-def IsKarpReducible (A B : Language α) : Prop :=
+def IsKarpReducible (A B : DecisionProblem α) : Prop :=
   ∃ f : (Fin 1 → List α) → List α,
     PolyTimeComputable f ∧ ∀ x, x ∈ A ↔ f ![x] ∈ B
 
@@ -60,14 +61,14 @@ notation:50 A " ≤ₚ " B => IsKarpReducible A B
 
 /-! ## NP-Hardness and NP-Completeness -/
 
-/-- NP-hard: Every language in NP Karp-reduces to this language.
+/-- NP-hard: Every decision problem in NP Karp-reduces to this problem.
 
     This is the core definition that we need for the BQP ≠ NP proof. -/
-def IsNPHard (L : Language α) : Prop :=
+def IsNPHard (L : DecisionProblem α) : Prop :=
   ∀ B ∈ ClassNP α, B ≤ₚ L
 
 /-- NP-complete: In NP and NP-hard (the hardest problems in NP). -/
-def IsNPComplete (L : Language α) : Prop :=
+def IsNPComplete (L : DecisionProblem α) : Prop :=
   L ∈ ClassNP α ∧ IsNPHard L
 
 /-! ## Basic Properties -/
@@ -96,7 +97,7 @@ theorem ClassP_subset_ClassNP : ClassP α ⊆ ClassNP α := by
       exact hV
 
 /-- Karp reduction is transitive -/
-theorem IsKarpReducible.trans {A B C : Language α}
+theorem IsKarpReducible.trans {A B C : DecisionProblem α}
     (hAB : A ≤ₚ B) (hBC : B ≤ₚ C) : A ≤ₚ C := by
   obtain ⟨f, hf, hcorr_f⟩ := hAB
   obtain ⟨g, hg, hcorr_g⟩ := hBC
@@ -110,7 +111,7 @@ theorem IsKarpReducible.trans {A B C : Language α}
 
 /-- If L is NP-complete and L ≤ₚ L', then L' is NP-hard -/
 theorem IsNPComplete.reduces_to_implies_hard
-    {L L' : Language α} (hL : IsNPComplete L) (h : L ≤ₚ L') : IsNPHard L' := by
+    {L L' : DecisionProblem α} (hL : IsNPComplete L) (h : L ≤ₚ L') : IsNPHard L' := by
   intro B hB_in_NP
   have hBL := hL.2 B hB_in_NP
   exact IsKarpReducible.trans hBL h
@@ -149,9 +150,9 @@ def Instance.isSatisfiable {n : ℕ} (φ : Instance n) : Prop :=
 
 end SAT
 
-/-- 3-SAT as a language (for a fixed encoding).
+/-- 3-SAT as a decision problem (for a fixed encoding).
     We define this axiomatically - the encoding details don't affect the theory. -/
-axiom SAT3Language : Language Bool
+axiom SAT3Language : DecisionProblem Bool
 
 /-- Cook-Levin Theorem (AXIOMATIZED for now):
     3-SAT is NP-complete.

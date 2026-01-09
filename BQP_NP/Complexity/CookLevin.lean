@@ -35,8 +35,8 @@ def encodeInstance {n : ℕ} (inst : SAT.Instance n) : List Bool :=
   -- We assume a standard binary encoding exists.
   []
 
-/-- The concrete 3-SAT Language -/
-def SAT3_Concrete : Language Bool :=
+/-- The concrete 3-SAT Decision Problem -/
+def SAT3_Concrete : DecisionProblem Bool :=
   { s | ∃ (n : ℕ) (inst : SAT.Instance n), s = encodeInstance inst ∧ inst.isSatisfiable }
 
 /-! ## 2. The Reduction Function -/
